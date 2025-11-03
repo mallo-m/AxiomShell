@@ -3,4 +3,6 @@ AxiomShell.exe
 .o/*
 *.swp
 *.bak
-
+ShellClient/.AxiomShell
+ShellClient/.AxiomShell/*
+ShellClient/.axiom-shell-history
