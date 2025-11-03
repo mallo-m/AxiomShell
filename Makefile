@@ -4,11 +4,12 @@ include mk/utils.mk
 include mk/base64.mk
 include mk/network.mk
 
-CC = /usr/bin/x86_64-w64-mingw32-gcc-win32
-CXX = /usr/bin/x86_64-w64-mingw32-g++-win32
-LIBS = -lws2_32 -lstdc++
+CC = x86_64-w64-mingw32-gcc-win32
+CXX = x86_64-w64-mingw32-g++-win32
+LIBS = -lws2_32
 LIBSFOLDERS = -L/usr/lib/x86_64-linux-gnu/
-vpath %.cu $(dir MAKEFILE_LIST)
+vpath %.cpp $(dir MAKEFILE_LIST)
+vpath %.c $(dir MAKEFILE_LIST)
 CFLAGS = -Wall -Wextra -Werror -Wno-unused-result -Wno-unused-parameter -Wno-unused-function -Wno-ignored-qualifiers -I./includes
 CPPFLAGS += -MMD -MP
 OBJDIR = .o
@@ -17,7 +18,8 @@ NAME = AxiomShell
 
 OBJS = $(subst .cpp,.o,$(subst ./src/,./$(OBJDIR)/,$(SRCS)))
 OBJS := $(subst .c,.o,$(subst ./src/,./$(OBJDIR)/,$(OBJS)))
-DEPS = $(subst .c,.d,$(subst ./src/,./$(OBJDIR)/,$(SRCS)))
+DEPS = $(subst .cpp,.d,$(subst ./src/,./$(OBJDIR)/,$(SRCS)))
+DEPS := $(subst .c,.d,$(subst ./src/,./$(OBJDIR)/,$(SRCS)))
 
 all: $(NAME)
 
