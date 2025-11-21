@@ -6,11 +6,14 @@
 * \d : How many arguments are to be skipped, as they hold options flags
 */
 
+#include "AxiomShell.h"
 #include "ls.h"
 #include "Glibc.h"
+#include "autoxor.h"
 
 SIZE_T BUILTIN_LS_parse_options(int ac, char **av)
 {
+	STACK_RANDOMIZER;
 	int i;
 	size_t j;
 	SIZE_T n;
@@ -27,9 +30,9 @@ SIZE_T BUILTIN_LS_parse_options(int ac, char **av)
 		j = 1;
 		while (av[i][j] != '\0')
 		{
-			if ((n = drunk_strrchr("alRrtdG1Ss", av[i][j])) == (SIZE_T)-1)
+			if ((n = drunk_strrchr(XorStr("alRrtdG1Ss"), av[i][j])) == (SIZE_T)-1)
 			{
-				printf("[!] Illegal option: %c\n", av[i][j]);
+				xprintf("[!] Illegal option: %c\n", av[i][j]);
 				return (0);
 			}
 			g_ls_flags |= (1 << n);

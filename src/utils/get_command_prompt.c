@@ -1,3 +1,4 @@
+#include "AxiomShell.h"
 #include "Utils.h"
 #include "Glibc.h"
 
@@ -5,6 +6,7 @@
 
 char* UTILS_get_command_prompt()
 {
+	STACK_RANDOMIZER;
 	size_t size;
 	PCHAR currDir;
 	CHAR userBuffer[UN_LEN + 1];
@@ -28,7 +30,7 @@ char* UTILS_get_command_prompt()
 	b64result = WRAPPER_base64_encode(result);
 	free(result);
 
-	printf("[+] prompt: %s\n", b64result);
+	DEBUG_LOG("[+] prompt: %s\n", b64result);
 	return (b64result);
 }
 

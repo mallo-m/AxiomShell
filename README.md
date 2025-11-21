@@ -18,8 +18,8 @@ AxiomShell is a simple reverse shell in C, coded with sole purpose of avoiding i
 | HarfangLab            |  ✅ - OK       |
 | WithSecure            |  ⚠️ - Untested |
 | Cortex XDR            |  ⚠️ - Untested |
-| Sentinel ONE          |  ⚠️ - Untested |
-| Crowdstrike Falcon    |  ⚠️ - Untested |
+| Sentinel ONE          |  ✅ - OK       |
+| Crowdstrike Falcon    |  ✅ - OK       |
 
 TODO list:
 - Find and fix the cause of intempestive "Unknown builtin name" error when typing-in a valid BUILTIN name

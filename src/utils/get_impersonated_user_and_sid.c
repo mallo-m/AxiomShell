@@ -1,3 +1,4 @@
+#include "AxiomShell.h"
 #include <windows.h>
 #include <sddl.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 // This function accounts for impersonated tokens
 BOOL UTILS_get_impersonated_user_and_sid(char** domain, char** username, char** sid)
 {
+	STACK_RANDOMIZER;
 	DWORD infoLength;
 	PTOKEN_USER tokenUser;
 	SID_NAME_USE sidType;

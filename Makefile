@@ -11,6 +11,7 @@ LIBSFOLDERS = -L/usr/lib/x86_64-linux-gnu/
 vpath %.cpp $(dir MAKEFILE_LIST)
 vpath %.c $(dir MAKEFILE_LIST)
 CFLAGS = -Wall -Wextra -Werror -Wno-unused-result -Wno-unused-parameter -Wno-unused-function -Wno-ignored-qualifiers -I./includes
+CXXFLAGS = -Wall -Wextra -Werror -Wno-unused-result -Wno-unused-parameter -Wno-unused-function -Wno-ignored-qualifiers -I./includes
 CPPFLAGS += -MMD -MP
 OBJDIR = .o
 UNAME = $(shell uname)
@@ -29,7 +30,7 @@ $(NAME): $(OBJS)
 	@if [ -e files_missing ]; then \
 		printf "\033[1;31m\n[COMPILATION FAILED]\033[0m\n"; \
 	else \
-		$(CXX) $(OBJS) -o $(NAME) $(LIBSFOLDERS) $(LIBS) && \
+		$(CXX) -s -static $(OBJS) -o $(NAME) $(LIBSFOLDERS) $(LIBS) && \
 			printf "\033[1;36m\n[COMPILATION SUCCESSFUL]\033[0m\n" || \
 			printf "\033[1;31m\n[COMPILATION FAILED]\033[0m\n"; \
 		chown 1000:users $(NAME).exe >/dev/null 2>&1; \
@@ -43,8 +44,8 @@ $(OBJDIR):
 $(OBJDIR)/%.o: src/%.c | $(OBJDIR)
 	@$(shell mkdir -p $(dir $@))
 	@$(shell touch /tmp/.makefile_link)
-	@printf "%-50s" "Precompiling $(notdir $@)..."
-	@$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $< 2> ./tmp_log || touch ./tmp_errors
+	@printf "%-50s" "C Precompiling $(notdir $@)..."
+	@$(CXX) $(CFLAGS) $(CPPFLAGS) -c -o $@ $< 2> ./tmp_log || touch ./tmp_errors
 	@if [ -e tmp_errors ]; then \
 		printf "\033[1;31m[KO]\n\033[0m" && cat 1>&2 ./tmp_log && touch files_missing; \
 	elif test -s ./tmp_log; then \
@@ -57,7 +58,7 @@ $(OBJDIR)/%.o: src/%.c | $(OBJDIR)
 $(OBJDIR)/%.o: src/%.cpp | $(OBJDIR)
 	@$(shell mkdir -p $(dir $@))
 	@$(shell touch /tmp/.makefile_link)
-	@printf "%-50s" "Precompiling $(notdir $@)..."
+	@printf "%-50s" "C++ Precompiling $(notdir $@)..."
 	@$(CXX) $(CFLAGS) $(CPPFLAGS) -c -o $@ $< 2> ./tmp_log || touch ./tmp_errors
 	@if [ -e tmp_errors ]; then \
 		printf "\033[1;31m[KO]\n\033[0m" && cat 1>&2 ./tmp_log && touch files_missing; \

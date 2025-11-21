@@ -5,6 +5,7 @@
 // Display all file-type targets
 void BUILTIN_LS_DISPLAY_TARGETS_regular_files(SOCKET sock, PLS_TARGET targets)
 {
+	STACK_RANDOMIZER;
 	DWORD fileAttr;
 	CHAR buffer[1024];
 
@@ -36,6 +37,7 @@ void BUILTIN_LS_DISPLAY_TARGETS_regular_files(SOCKET sock, PLS_TARGET targets)
 // Display all directory-type targets
 void BUILTIN_LS_DISPLAY_TARGETS_directories(SOCKET sock, PLS_TARGET targets)
 {
+	STACK_RANDOMIZER;
 	DWORD fileAttr;
 	CHAR buffer[1024];
 

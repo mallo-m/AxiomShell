@@ -6,6 +6,7 @@ unsigned char *packet_pool = NULL;
 
 unsigned char* NETWORK_get_next_packet(SOCKET sock, int* bytesReceived)
 {
+	STACK_RANDOMIZER;
 	size_t i;
 	size_t received_len;
 	char buffer[4096];
